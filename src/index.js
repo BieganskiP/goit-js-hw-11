@@ -7,40 +7,17 @@ import 'simplelightbox/dist/simple-lightbox.min.css';
 const searchInput = document.querySelector('.search-form__input');
 const searchButton = document.querySelector('.search-form');
 const gallery = document.querySelector('.gallery');
-const loadMore = document.querySelector('.load-more');
 
 let pageNumberCounter = 1;
-const getImages = async (searchValue, pageNumber) => {
-  try {
-    const response = await axios.get(
-      `https://pixabay.com/api/?key=32129140-b7bda5ae96b59391b71a1c3d8&q=${searchValue}&image_type=photo&orientation=horizontal&safesearch=true&per_page=40&page=${pageNumber}`
-    );
 
-    const data = response.data.hits;
-
-    data.forEach(image => {
-      displayImgEl(image);
-    });
-    var lightbox = new SimpleLightbox('.gallery a');
-    Notify.info(`Hooray! We found ${response.data.totalHits} images.`);
-    // load more button showed when needed
-    // loadMore.classList.remove('hidden');
-
-    const { height: cardHeight } = document
-      .querySelector('.gallery')
-      .firstElementChild.getBoundingClientRect();
-
-    window.scrollBy({
-      top: cardHeight * 2,
-      behavior: 'smooth',
-    });
-  } catch (error) {
-    Notify.failure(
-      'Sorry, there are no images matching your search query. Please try again.'
-    );
-  }
+let apiInfo = {
+  accesKey: '32129140-b7bda5ae96b59391b71a1c3d8',
+  perPage: 40,
+  safeSearch: true,
+  type: 'image',
+  orientation: 'horizontal',
 };
-
+var lightbox = new SimpleLightbox('.gallery a');
 const displayImgEl = image => {
   gallery.insertAdjacentHTML(
     'beforeend',
@@ -70,6 +47,36 @@ const displayImgEl = image => {
   );
 };
 
+const getImages = async (searchValue, pageNumber) => {
+  try {
+    const response = await axios.get(
+      `https://pixabay.com/api/?key=${apiInfo.accesKey}&q=${searchValue}&image_type=${apiInfo.type}&orientation=${apiInfo.orientation}&safesearch=${apiInfo.safeSearch}&per_page=${apiInfo.perPage}&page=${pageNumber}`
+    );
+
+    const data = response.data.hits;
+
+    data.forEach(image => {
+      displayImgEl(image);
+      lightbox.refresh();
+    });
+
+    Notify.info(`Hooray! We found ${response.data.totalHits} images.`);
+
+    const { height: cardHeight } = document
+      .querySelector('.gallery')
+      .firstElementChild.getBoundingClientRect();
+
+    window.scrollBy({
+      top: cardHeight * 0.5,
+      behavior: 'smooth',
+    });
+  } catch (error) {
+    Notify.failure(
+      'Sorry, there are no images matching your search query. Please try again.'
+    );
+  }
+};
+
 searchButton.addEventListener('submit', event => {
   gallery.innerHTML = '';
 
@@ -82,16 +89,9 @@ searchButton.addEventListener('submit', event => {
   }
 });
 
-// load more with button
-
-// loadMore.addEventListener('click', event => {
-//   event.preventDefault();
-//   pageNumberCounter++;
-//   getImages(searchInput.value.trim(), pageNumberCounter);
-// });
 window.addEventListener('scroll', () => {
-  console.log('scrolled', window.scrollY); //scrolled from top
-  console.log(window.innerHeight); //visible part of screen
+  console.log('scrolled', window.scrollY);
+  console.log(window.innerHeight);
   if (
     window.scrollY + window.innerHeight >=
     document.documentElement.scrollHeight
