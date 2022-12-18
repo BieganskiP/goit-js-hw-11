@@ -57,8 +57,9 @@ const getImages = async (searchValue, pageNumber) => {
 
     data.forEach(image => {
       displayImgEl(image);
-      lightbox.refresh();
     });
+    lightbox.refresh();
+    Notify.info(`Hooray! We found ${response.data.totalHits} images.`);
 
     const { height: cardHeight } = document
       .querySelector('.gallery')
@@ -68,7 +69,6 @@ const getImages = async (searchValue, pageNumber) => {
       top: cardHeight * 0.5,
       behavior: 'smooth',
     });
-    return data;
   } catch (error) {
     Notify.failure(
       'Sorry, there are no images matching your search query. Please try again.'
@@ -78,14 +78,12 @@ const getImages = async (searchValue, pageNumber) => {
 
 searchButton.addEventListener('submit', event => {
   gallery.innerHTML = '';
-
   event.preventDefault();
   if (searchInput.value == '') {
     return;
   } else {
     pageNumberCounter = 1;
     getImages(searchInput.value.trim(), pageNumberCounter);
-    Notify.info(`Hooray! We found ${response.data.totalHits} images.`);
   }
 });
 
