@@ -7,29 +7,35 @@ import 'simplelightbox/dist/simple-lightbox.min.css';
 const searchInput = document.querySelector('.search-form__input');
 const searchButton = document.querySelector('.search-form');
 const gallery = document.querySelector('.gallery');
-
-const getImages = async searchValue => {
+const loadMore = document.querySelector('.load-more');
+let pageNumberCounter = 1;
+const getImages = async (searchValue, pageNumber) => {
   try {
     const response = await axios.get(
-      `https://pixabay.com/api/?key=32129140-b7bda5ae96b59391b71a1c3d8&q=${searchValue}&image_type=photo&orientation=horizontal&safesearch=true`
+      `https://pixabay.com/api/?key=32129140-b7bda5ae96b59391b71a1c3d8&q=${searchValue}&image_type=photo&orientation=horizontal&safesearch=true&per_page=40&page=${pageNumber}`
     );
-    console.log(response.data);
-    const data = response.data.hits;
-    Notify.info(`Hooray! We found ${response.data.totalHits} images.`);
 
-    data.forEach(image => displayImgEl(image));
+    const data = response.data.hits;
+
+    data.forEach(image => {
+      displayImgEl(image);
+    });
+    var lightbox = new SimpleLightbox('.gallery a');
+
+    loadMore.classList.remove('hidden');
   } catch (error) {
-    Notify.failure('Oops, no pictures found');
+    Notify.failure(
+      'Sorry, there are no images matching your search query. Please try again.'
+    );
   }
 };
-var lightbox = new SimpleLightbox('.gallery a');
 
 const displayImgEl = image => {
   gallery.insertAdjacentHTML(
     'beforeend',
     `<div class="photo-card">
       <a href="${image.largeImageURL}">
-        <img src="${image.previewURL}" alt="${image.tags}" loading="lazy" />
+        <img src="${image.webformatURL}" alt="${image.tags}" loading="lazy" />
       </a>
     <div class="info">
       <p class="info-item">
@@ -60,6 +66,11 @@ searchButton.addEventListener('submit', event => {
   if (searchInput.value == '') {
     return;
   } else {
-    getImages(searchInput.value.trim());
+    getImages(searchInput.value.trim(), pageNumberCounter);
   }
+});
+loadMore.addEventListener('click', event => {
+  event.preventDefault();
+  pageNumberCounter++;
+  getImages(searchInput.value.trim(), pageNumberCounter);
 });
